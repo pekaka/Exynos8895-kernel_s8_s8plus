@@ -1,0 +1,51 @@
+#!/system/bin/sh
+
+cat << CTAG
+{
+    name:"A53 CPU",
+    elements:[
+	{ SLiveLabel:{
+		title:"A53 LITTLE Cores live frequency",
+		refresh:500,
+		action:"live LiveCPUFrequency_LITTLE"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SOptionList:{
+		title:"A53 Max Cpufreq",
+		description:"A53 little Cores max frequency",
+		default:$(echo "$(/res/synapse/actions/tuning A53_max_limit)"),
+		action:"tuning A53_max_limit",
+		values:[1690000, 1456000, 1248000, 1053000, 949000, 832000, 715000, 598000, 455000],
+		notify:[
+			{
+				on:APPLY,
+				do:[ REFRESH, APPLY ],
+				to:"/sys/devices/system/cpu/cpu0/cpufreq"
+			}
+		]
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SOptionList:{
+		title:"A53 Min Cpufreq",
+		description:"A53 little Cores min frequency",
+		default:$(echo "$(/res/synapse/actions/tuning A53_min_limit)"),
+		action:"tuning A53_min_limit",
+		values:[1690000, 1456000, 1248000, 1053000, 949000, 832000, 715000, 598000, 455000],
+		notify:[
+			{
+				on:APPLY,
+				do:[ REFRESH, APPLY ],
+				to:"/sys/devices/system/cpu/cpu0/cpufreq"
+			}
+		]
+	}},
+	{ SSpacer:{
+		height:1
+	}},	
+    ]
+}
+CTAG

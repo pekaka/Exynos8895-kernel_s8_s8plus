@@ -1,0 +1,13 @@
+#
+# start custom kernel script
+#
+
+on property:sys.boot_completed=1
+    start kinit_su
+
+service kinit_su /sbin/kernel_init.sh
+    user root
+    seclabel u:r:init:s0
+    oneshot
+    disabled
+

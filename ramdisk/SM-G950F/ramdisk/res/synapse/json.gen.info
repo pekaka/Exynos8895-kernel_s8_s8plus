@@ -1,0 +1,93 @@
+#!/sbin/busybox sh
+
+cat << CTAG
+{
+    name:"INFO",
+    elements:[
+	{ SPane:{
+		title:"Kernel Build by",
+		description:"<a href='https://forum.xda-developers.com/galaxy-s8/samsung-galaxy-s8--s8-cross-device-development/june-14-2017-pekakaexynos8895s8-t3621310'>xda@pekaka</a>."
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Kernel Thread",
+		description:"<a href='http://bbs.gfan.com/android-9158764-1-1.html'>gfan@pekaka</a>"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Kernel Version"
+	}},
+	{ SLiveLabel:{
+		refresh:10000,
+		action:"default version"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Build"
+	}},
+	{ SLiveLabel:{
+		refresh:10000,
+		action:"default build"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Android Version"
+	}},
+	{ SLiveLabel:{
+		refresh:10000,
+		action:"default android_version"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Build Date"
+	}},
+	{ SLiveLabel:{
+		refresh:10000,
+		action:"default date"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Baseband"
+	}},
+	{ SLiveLabel:{
+		refresh:10000,
+		action:"default baseband"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Bootloader"
+	}},
+	{ SLiveLabel:{
+		refresh:10000,
+		action:"default bootloader"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SPane:{
+		title:"Serial"
+	}},
+	{ SLiveLabel:{
+		refresh:10000,
+		action:"default serial"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+    ]
+}
+CTAG

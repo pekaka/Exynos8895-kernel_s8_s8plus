@@ -1,0 +1,51 @@
+#!/system/bin/sh
+
+cat << CTAG
+{
+    name:"MNGS CPU",
+    elements:[
+	{ SLiveLabel:{
+		title:"MNGS big Cores live frequency",
+		refresh:500,
+		action:"live LiveCPUFrequency_big"
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SOptionList:{
+		title:"MNGS Max Cpufreq",
+		description:"MNGS big Cores max frequency,if set 2158000,GPU must be set not higher than 455;if set 2002000, 1937000,GPU must be set not higher than 385",
+		default:$(echo "$(/res/synapse/actions/tuning MNGS_max_limit)"),
+		action:"tuning MNGS_max_limit",
+		values:[2652000, 2574000, 2496000, 2314000, 2158000, 2002000, 1937000, 1807000, 1703000, 1469000, 1261000, 1170000, 1066000, 962000, 858000, 741000],
+		notify:[
+			{
+				on:APPLY,
+				do:[ REFRESH, APPLY ],
+				to:"/sys/devices/system/cpu/cpu4/cpufreq"
+			}
+		]
+	}},
+	{ SSpacer:{
+		height:1
+	}},
+	{ SOptionList:{
+		title:"MNGS Min Cpufreq",
+		description:"MNGS big Cores min frequency",
+		default:$(echo "$(/res/synapse/actions/tuning MNGS_min_limit)"),
+		action:"tuning MNGS_min_limit",
+		values:[2652000, 2574000, 2496000, 2314000, 2158000, 2002000, 1937000, 1807000, 1703000, 1469000, 1261000, 1170000, 1066000, 962000, 858000, 741000],
+		notify:[
+			{
+				on:APPLY,
+				do:[ REFRESH, APPLY ],
+				to:"/sys/devices/system/cpu/cpu4/cpufreq"
+			}
+		]
+	}},
+	{ SSpacer:{
+		height:1
+	}},	
+    ]
+}
+CTAG
