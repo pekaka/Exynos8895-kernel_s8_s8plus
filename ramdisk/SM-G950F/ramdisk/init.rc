@@ -625,13 +625,6 @@ on post-fs-data
     chown system system /sys/class/mstldo/mst_drv/mfc
     chmod 0770 /sys/class/mstldo/mst_drv/mfc
 
-# [ SEC_SELINUX_PORTING_COMMON
-    mkdir /data/misc/audit 0775 audit system 
-
-    # start auditd
-    start auditd
-# ] SEC_SELINUX_PORTING_COMMON
-
     # ATT CIQ
     mkdir /data/iq_archive 0771 system system
     mkdir /data/iq_archive/packages 0771 system system
@@ -1375,80 +1368,11 @@ service SIDESYNC_service /system/bin/ss_conn_daemon
     user system
     group inet net_raw
     
-## WTL_EDM_START
-## EDM AuditLog
-service edmaudit /system/bin/edmaudit
-    class main
-    user root
-    
-## WTL_EDM_END
-
-service kap_enable /sbin/knox_changer -e
-    class main
-    seclabel u:r:kapd:s0
-    disabled
-    oneshot
-
-service kap_disable /sbin/knox_changer -d
-    class main
-    seclabel u:r:kapd:s0
-    disabled
-    oneshot
-
-on property:security.knox_kap_mode=true
-    start kap_enable
-on property:security.knox_kap_mode=false
-    start kap_disable
-
-service afw_enable /sbin/knox_changer -f
-    class main
-    seclabel u:r:kapd:s0
-    disabled
-    oneshot
-
-service afw_disable /sbin/knox_changer -s
-    class main
-    seclabel u:r:kapd:s0
-    disabled
-    oneshot
-
-on property:security.knox_afw_mode=true
-    start afw_enable
-on property:security.knox_afw_mode=false
-    start afw_disable
-
-service ucs_enable /sbin/knox_changer -u
-    class main
-    seclabel u:r:kapd:s0
-    disabled
-    oneshot
-
-service ucs_disable /sbin/knox_changer -v
-    class main
-    seclabel u:r:kapd:s0
-    disabled
-    oneshot
-
-service ucs_reset /sbin/knox_changer -w
-    class main
-    seclabel u:r:kapd:s0
-    disabled
-    oneshot
-
-on property:security.knox_ucs_mode=true
-    start ucs_enable
-on property:security.knox_ucs_mode=false
-    start ucs_disable
-on property:security.knox_ucs_mode=reset
-    start ucs_reset
 on property:ro.debuggable=1
     # Give writes to anyone for the trace folder on debug builds.
     # The folder is used to store method traces.
     chmod 0773 /data/misc/trace
     start console
-
-service vaultkeeperd /system/bin/vaultkeeperd
-    class core
 
 service drm /system/bin/drmserver
     class main
@@ -1477,21 +1401,6 @@ service mobicore /system/bin/mcDriverDaemon -r /system/app/FFFFFFFF0000000000000
 service flash_recovery /system/bin/install-recovery.sh
     class main
     oneshot
-
-# [ SEC_SELINUX_PORTING_COMMON
-service auditd /system/bin/auditd -k
-    class main
-    seclabel u:r:auditd:s0
-    disabled
-    oneshot
-
-on property:selinux.sec.restorecon=1
-    restorecon_data_force /data
-    
-# Reload SE Android Policy for MDM
-on property:persist.security.mdm.policy=1
-    setprop selinux.reload_policy 1
-# ] SEC_SELINUX_PORTING_COMMON
 
 # bootchecker
 service bootchecker /system/bin/bootchecker
@@ -1607,14 +1516,6 @@ service TvoutService_C /system/bin/bintvoutservice
     group graphics
 on property:ro.SecEDS.enable=false
     stop TvoutService_C
-
-#preparefbe
-service preparefbe_ce /system/bin/preparefbe storage_ce
-    oneshot
-    disabled
-service preparefbe_de /system/bin/preparefbe storage_de
-    oneshot
-    disabled
 
 service vpnclientd /system/bin/vpnclientd
     socket vpnclientd seqpacket 0600 system system
