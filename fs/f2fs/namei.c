@@ -990,10 +990,11 @@ static const char *f2fs_encrypted_follow_link(struct dentry *dentry, void **cook
 {
 	struct page *cpage = NULL;
 	char *caddr, *paddr = NULL;
-	struct fscrypt_str cstr = FSTR_INIT(NULL, 0);
-	struct fscrypt_str pstr = FSTR_INIT(NULL, 0);
-	struct fscrypt_symlink_data *sd;
 	struct inode *inode = d_inode(dentry);
+ 	struct fscrypt_str cstr = FSTR_INIT(NULL, 0);
+ 	struct fscrypt_str pstr = FSTR_INIT(NULL, 0);
+ 	struct fscrypt_symlink_data *sd;
+	loff_t size = min_t(loff_t, i_size_read(inode), PAGE_SIZE - 1);
 	u32 max_size = inode->i_sb->s_blocksize;
 	int res;
 
@@ -1004,7 +1005,8 @@ static const char *f2fs_encrypted_follow_link(struct dentry *dentry, void **cook
 	cpage = read_mapping_page(inode->i_mapping, 0, NULL);
 	if (IS_ERR(cpage))
 		return ERR_CAST(cpage);
-	caddr = page_address(cpage);
+	caddr = kmap(cpage);
+	caddr[size] = 0;
 
 	/* Symlink is encrypted */
 	sd = (struct fscrypt_symlink_data *)caddr;
@@ -1013,6 +1015,12 @@ static const char *f2fs_encrypted_follow_link(struct dentry *dentry, void **cook
 
 	/* this is broken symlink case */
 	if (unlikely(cstr.len == 0)) {
+		res = -ENOENT;
+		goto errout;
+	}
+
+	/* this is broken symlink case */
+	if (unlikely(cstr.name[0] == 0)) {
 		res = -ENOENT;
 		goto errout;
 	}
@@ -1027,32 +1035,28 @@ static const char *f2fs_encrypted_follow_link(struct dentry *dentry, void **cook
 		goto errout;
 
 	res = fscrypt_fname_disk_to_usr(inode, 0, 0, &cstr, &pstr);
-	if (res)
+	if (res < 0)
 		goto errout;
-
-	/* this is broken symlink case */
-	if (unlikely(pstr.name[0] == 0)) {
-		res = -ENOENT;
-		goto errout;
-	}
 
 	paddr = pstr.name;
 
 	/* Null-terminate the name */
-	paddr[pstr.len] = '\0';
+	paddr[res] = '\0';
 
-	put_page(cpage);
+	kunmap(cpage);
+	page_cache_release(cpage);
 	return *cookie = paddr;
 errout:
 	fscrypt_fname_free_buffer(&pstr);
-	put_page(cpage);
+	kunmap(cpage);
+	page_cache_release(cpage);
 	return ERR_PTR(res);
 }
 
 const struct inode_operations f2fs_encrypted_symlink_inode_operations = {
 	.readlink       = generic_readlink,
-	.follow_link	= f2fs_encrypted_follow_link,
-	.put_link	= kfree_put_link,
+	.follow_link    = f2fs_encrypted_follow_link,
+	.put_link       = kfree_put_link,
 	.getattr	= f2fs_getattr,
 	.setattr	= f2fs_setattr,
 #ifdef CONFIG_F2FS_FS_XATTR
