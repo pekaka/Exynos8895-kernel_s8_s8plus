@@ -305,8 +305,7 @@ static void register_insn_emulation_sysctl(struct ctl_table *table)
 	ALTERNATIVE("nop", SET_PSTATE_PAN(1), ARM64_HAS_PAN,	\
 		CONFIG_ARM64_PAN)				\
 	: "=&r" (res), "+r" (data), "=&r" (temp)		\
-	: "r" ((unsigned long)addr), "i" (-EAGAIN),		\
-	  "i" (-EFAULT)						\
+	: "r" (addr), "i" (-EAGAIN), "i" (-EFAULT)		\
 	: "memory")
 
 #define __user_swp_asm(data, addr, res, temp) \

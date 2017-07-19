@@ -888,7 +888,6 @@ static void msg_written_handler(struct ssif_info *ssif_info, int result,
 		 * for details on the intricacies of this.
 		 */
 		int left;
-		unsigned char *data_to_send;
 
 		ssif_inc_stat(ssif_info, sent_messages_parts);
 
@@ -897,7 +896,6 @@ static void msg_written_handler(struct ssif_info *ssif_info, int result,
 			left = 32;
 		/* Length byte. */
 		ssif_info->multi_data[ssif_info->multi_pos] = left;
-		data_to_send = ssif_info->multi_data + ssif_info->multi_pos;
 		ssif_info->multi_pos += left;
 		if (left < 32)
 			/*
@@ -911,7 +909,7 @@ static void msg_written_handler(struct ssif_info *ssif_info, int result,
 		rv = ssif_i2c_send(ssif_info, msg_written_handler,
 				  I2C_SMBUS_WRITE,
 				  SSIF_IPMI_MULTI_PART_REQUEST_MIDDLE,
-				  data_to_send,
+				  ssif_info->multi_data + ssif_info->multi_pos,
 				  I2C_SMBUS_BLOCK_DATA);
 		if (rv < 0) {
 			/* request failed, just return the error. */

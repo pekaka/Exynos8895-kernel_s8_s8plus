@@ -697,7 +697,7 @@ static int ceph_writepages_start(struct address_space *mapping,
 	struct pagevec pvec;
 	int done = 0;
 	int rc = 0;
-	unsigned int wsize = i_blocksize(inode);
+	unsigned wsize = 1 << inode->i_blkbits;
 	struct ceph_osd_request *req = NULL;
 	int do_sync = 0;
 	loff_t snap_size, i_size;

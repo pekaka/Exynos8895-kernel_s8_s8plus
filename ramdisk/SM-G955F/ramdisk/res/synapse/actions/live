@@ -1,7 +1,9 @@
 BB=busybox;
 
-if [ -d "/sys/devices/battery" ]; then
-	P=/sys/devices/battery
+if [ -d "/sys/devices/platform/battery" ]; then
+	P=/sys/devices/platform/battery
+elif [ -d "/sys/devices/battery" ]; then
+	P=/sys/devices/battery	
 elif [ -d "/sys/devices/battery.54" ]; then
 	P=/sys/devices/battery.54
 elif [ -d "/sys/devices/battery.53" ]; then

@@ -28,7 +28,6 @@
 #include <asm/errno.h>
 #include <asm/esr.h>
 #include <asm/thread_info.h>
-#include <asm/asm-uaccess.h>
 #include <asm/unistd.h>
 
 /*
@@ -345,7 +344,7 @@ el1_da:
 	/*
 	 * Data abort handling
 	 */
-	mrs	x3, far_el1
+	mrs	x0, far_el1
 
 	enable_dbg
 
@@ -360,7 +359,6 @@ el1_da:
 	tbnz	x23, #7, 1f			// PSR_I_BIT
 	enable_irq
 1:
- 	clear_address_tag x0, x3
 	mov	x2, sp				// struct pt_regs
 	bl	do_mem_abort
 
@@ -529,7 +527,7 @@ el0_da:
 	// enable interrupts before calling the main handler
 	enable_dbg_and_irq
 	ct_user_exit
-	clear_address_tag x0, x26
+	bic	x0, x26, #(0xff << 56)
 	mov	x1, x25
 	mov	x2, sp
 	bl	do_mem_abort

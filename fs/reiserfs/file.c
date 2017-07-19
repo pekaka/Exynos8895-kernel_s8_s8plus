@@ -189,7 +189,7 @@ int reiserfs_commit_page(struct inode *inode, struct page *page,
 	int ret = 0;
 
 	th.t_trans_id = 0;
-	blocksize = i_blocksize(inode);
+	blocksize = 1 << inode->i_blkbits;
 
 	if (logit) {
 		reiserfs_write_lock(s);

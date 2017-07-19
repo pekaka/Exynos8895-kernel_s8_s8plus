@@ -2484,7 +2484,6 @@ err_counter:
 		mlx4_ib_delete_counters_table(ibdev, &ibdev->counters_table[i]);
 
 err_map:
-	mlx4_ib_free_eqs(dev, ibdev);
 	iounmap(ibdev->uar_map);
 
 err_uar:

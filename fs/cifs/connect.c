@@ -409,9 +409,6 @@ cifs_reconnect(struct TCP_Server_Info *server)
 		}
 	} while (server->tcpStatus == CifsNeedReconnect);
 
-	if (server->tcpStatus == CifsNeedNegotiate)
-		mod_delayed_work(cifsiod_wq, &server->echo, 0);
-
 	return rc;
 }
 

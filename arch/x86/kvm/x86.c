@@ -2950,12 +2950,6 @@ static int kvm_vcpu_ioctl_x86_set_vcpu_events(struct kvm_vcpu *vcpu,
 			      | KVM_VCPUEVENT_VALID_SMM))
 		return -EINVAL;
 
-	/* INITs are latched while in SMM */
-	if (events->flags & KVM_VCPUEVENT_VALID_SMM &&
-	    (events->smi.smm || events->smi.pending) &&
-	    vcpu->arch.mp_state == KVM_MP_STATE_INIT_RECEIVED)
-		return -EINVAL;
-
 	process_nmi(vcpu);
 	vcpu->arch.exception.pending = events->exception.injected;
 	vcpu->arch.exception.nr = events->exception.nr;
@@ -3121,14 +3115,11 @@ static void kvm_vcpu_ioctl_x86_get_xsave(struct kvm_vcpu *vcpu,
 	}
 }
 
-#define XSAVE_MXCSR_OFFSET 24
-
 static int kvm_vcpu_ioctl_x86_set_xsave(struct kvm_vcpu *vcpu,
 					struct kvm_xsave *guest_xsave)
 {
 	u64 xstate_bv =
 		*(u64 *)&guest_xsave->region[XSAVE_HDR_OFFSET / sizeof(u32)];
-	u32 mxcsr = *(u32 *)&guest_xsave->region[XSAVE_MXCSR_OFFSET / sizeof(u32)];
 
 	if (cpu_has_xsave) {
 		/*
@@ -3136,13 +3127,11 @@ static int kvm_vcpu_ioctl_x86_set_xsave(struct kvm_vcpu *vcpu,
 		 * CPUID leaf 0xD, index 0, EDX:EAX.  This is for compatibility
 		 * with old userspace.
 		 */
-		if (xstate_bv & ~kvm_supported_xcr0() ||
-			mxcsr & ~mxcsr_feature_mask)
+		if (xstate_bv & ~kvm_supported_xcr0())
 			return -EINVAL;
 		load_xsave(vcpu, (u8 *)guest_xsave->region);
 	} else {
-		if (xstate_bv & ~XFEATURE_MASK_FPSSE ||
-			mxcsr & ~mxcsr_feature_mask)
+		if (xstate_bv & ~XFEATURE_MASK_FPSSE)
 			return -EINVAL;
 		memcpy(&vcpu->arch.guest_fpu.state.fxsave,
 			guest_xsave->region, sizeof(struct fxregs_state));
@@ -4586,20 +4575,16 @@ emul_write:
 
 static int kernel_pio(struct kvm_vcpu *vcpu, void *pd)
 {
-	int r = 0, i;
+	/* TODO: String I/O for in kernel device */
+	int r;
 
-	for (i = 0; i < vcpu->arch.pio.count; i++) {
-		if (vcpu->arch.pio.in)
-			r = kvm_io_bus_read(vcpu, KVM_PIO_BUS, vcpu->arch.pio.port,
-					    vcpu->arch.pio.size, pd);
-		else
-			r = kvm_io_bus_write(vcpu, KVM_PIO_BUS,
-					     vcpu->arch.pio.port, vcpu->arch.pio.size,
-					     pd);
-		if (r)
-			break;
-		pd += vcpu->arch.pio.size;
-	}
+	if (vcpu->arch.pio.in)
+		r = kvm_io_bus_read(vcpu, KVM_PIO_BUS, vcpu->arch.pio.port,
+				    vcpu->arch.pio.size, pd);
+	else
+		r = kvm_io_bus_write(vcpu, KVM_PIO_BUS,
+				     vcpu->arch.pio.port, vcpu->arch.pio.size,
+				     pd);
 	return r;
 }
 
@@ -4636,8 +4621,6 @@ static int emulator_pio_in_emulated(struct x86_emulate_ctxt *ctxt,
 
 	if (vcpu->arch.pio.count)
 		goto data_avail;
-
-	memset(vcpu->arch.pio_data, 0, size * count);
 
 	ret = emulator_pio_in_out(vcpu, size, port, val, count, true);
 	if (ret) {
@@ -4822,8 +4805,6 @@ static bool emulator_get_segment(struct x86_emulate_ctxt *ctxt, u16 *selector,
 
 	if (var.unusable) {
 		memset(desc, 0, sizeof(*desc));
-		if (base3)
-			*base3 = 0;
 		return false;
 	}
 
@@ -4979,16 +4960,6 @@ static void emulator_set_nmi_mask(struct x86_emulate_ctxt *ctxt, bool masked)
 	kvm_x86_ops->set_nmi_mask(emul_to_vcpu(ctxt), masked);
 }
 
-static unsigned emulator_get_hflags(struct x86_emulate_ctxt *ctxt)
-{
-	return emul_to_vcpu(ctxt)->arch.hflags;
-}
-
-static void emulator_set_hflags(struct x86_emulate_ctxt *ctxt, unsigned emul_flags)
-{
-	kvm_set_hflags(emul_to_vcpu(ctxt), emul_flags);
-}
-
 static const struct x86_emulate_ops emulate_ops = {
 	.read_gpr            = emulator_read_gpr,
 	.write_gpr           = emulator_write_gpr,
@@ -5028,8 +4999,6 @@ static const struct x86_emulate_ops emulate_ops = {
 	.intercept           = emulator_intercept,
 	.get_cpuid           = emulator_get_cpuid,
 	.set_nmi_mask        = emulator_set_nmi_mask,
-	.get_hflags          = emulator_get_hflags,
-	.set_hflags          = emulator_set_hflags,
 };
 
 static void toggle_interruptibility(struct kvm_vcpu *vcpu, u32 mask)
@@ -5082,6 +5051,7 @@ static void init_emulate_ctxt(struct kvm_vcpu *vcpu)
 	BUILD_BUG_ON(HF_GUEST_MASK != X86EMUL_GUEST_MASK);
 	BUILD_BUG_ON(HF_SMM_MASK != X86EMUL_SMM_MASK);
 	BUILD_BUG_ON(HF_SMM_INSIDE_NMI_MASK != X86EMUL_SMM_INSIDE_NMI_MASK);
+	ctxt->emul_flags = vcpu->arch.hflags;
 
 	init_decode_cache(ctxt);
 	vcpu->arch.emulate_regs_need_sync_from_vcpu = false;
@@ -5477,6 +5447,8 @@ restart:
 		unsigned long rflags = kvm_x86_ops->get_rflags(vcpu);
 		toggle_interruptibility(vcpu, ctxt->interruptibility);
 		vcpu->arch.emulate_regs_need_sync_to_vcpu = false;
+		if (vcpu->arch.hflags != ctxt->emul_flags)
+			kvm_set_hflags(vcpu, ctxt->emul_flags);
 		kvm_rip_write(vcpu, ctxt->eip);
 		if (r == EMULATE_DONE)
 			kvm_vcpu_check_singlestep(vcpu, rflags, &r);
@@ -5962,8 +5934,7 @@ static int emulator_fix_hypercall(struct x86_emulate_ctxt *ctxt)
 
 	kvm_x86_ops->patch_hypercall(vcpu, instruction);
 
-	return emulator_write_emulated(ctxt, rip, instruction, 3,
-		&ctxt->exception);
+	return emulator_write_emulated(ctxt, rip, instruction, 3, NULL);
 }
 
 static int dm_request_for_irq_injection(struct kvm_vcpu *vcpu)
@@ -6997,12 +6968,6 @@ int kvm_arch_vcpu_ioctl_set_mpstate(struct kvm_vcpu *vcpu,
 {
 	if (!kvm_vcpu_has_lapic(vcpu) &&
 	    mp_state->mp_state != KVM_MP_STATE_RUNNABLE)
-		return -EINVAL;
-
-	/* INITs are latched while in SMM */
-	if ((is_smm(vcpu) || vcpu->arch.smi_pending) &&
-	    (mp_state->mp_state == KVM_MP_STATE_SIPI_RECEIVED ||
-	     mp_state->mp_state == KVM_MP_STATE_INIT_RECEIVED))
 		return -EINVAL;
 
 	if (mp_state->mp_state == KVM_MP_STATE_SIPI_RECEIVED) {
@@ -8232,7 +8197,8 @@ bool kvm_arch_can_inject_async_page_present(struct kvm_vcpu *vcpu)
 	if (!(vcpu->arch.apf.msr_val & KVM_ASYNC_PF_ENABLED))
 		return true;
 	else
-		return kvm_can_do_async_pf(vcpu);
+		return !kvm_event_needs_reinjection(vcpu) &&
+			kvm_x86_ops->interrupt_allowed(vcpu);
 }
 
 void kvm_arch_start_assignment(struct kvm *kvm)
