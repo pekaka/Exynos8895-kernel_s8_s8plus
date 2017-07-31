@@ -475,6 +475,8 @@ on fs
     chown system media_rw /sys/class/lcd/panel/adaptive_control
     chown system system /sys/class/lcd/panel/SVC_OCTA
     chown system system /sys/class/lcd/panel/xtalk_mode
+    chown system system /sys/class/lcd/panel/poc
+    chown system system /sys/class/lcd/panel/grayspot
 
 # Permissions for LCD COPR
     chown system system /sys/class/lcd/panel/copr
@@ -514,6 +516,10 @@ on fs
 # Permission for Active clock
     chmod 0660 /dev/act_clk
     chown system system /dev/act_clk
+
+# Permission for PANEL POC
+    chmod 0660 /dev/poc
+    chown system system /dev/poc
 
 # Permissions for System LSI NFC
 # NFC : Permissions for NFC

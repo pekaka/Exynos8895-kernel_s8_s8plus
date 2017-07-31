@@ -304,7 +304,7 @@
 				buck2_reg: BUCK2 {
 					regulator-name = "vdd_cpucl0";
 					regulator-min-microvolt = <450000>;
-					regulator-max-microvolt = <1575000>;
+					regulator-max-microvolt = <1375000>;
 					regulator-always-on;
 					regulator-ramp-delay = <12000>;
 					regulator-initial-mode = <1>;
@@ -313,7 +313,7 @@
 				buck3_reg: BUCK3 {
 					regulator-name = "vdd_cpucl1";
 					regulator-min-microvolt = <450000>;
-					regulator-max-microvolt = <1475000>;
+					regulator-max-microvolt = <1375000>;
 					regulator-always-on;
 					regulator-ramp-delay = <12000>;
 					regulator-initial-mode = <1>;
@@ -1339,7 +1339,7 @@
 					cirrus,micd-dbtime = <0x1>;
 					cirrus,micd-timeout-ms = <1000>;
 					cirrus,micd-force-micbias;
-					cirrus,hpdet-short-circuit-imp = <3>;
+					cirrus,hpdet-short-circuit-imp = <2>;
 					cirrus,micd-ranges = <
 						116 226
 						173 582

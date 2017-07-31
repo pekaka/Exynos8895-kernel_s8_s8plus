@@ -124,46 +124,6 @@ cat << CTAG
 	{ SSpacer:{
 		height:1
 	}},
-	{ SSeekBar:{
-		title:"HV QC20 Input Current",
-		description:"",
-		min:400, max:3500, unit:" mA", step:25,
-		default:$(cat /sys/devices/platform/battery/hv_qc20_input),
-		action:"generic /sys/devices/platform/battery/hv_qc20_input"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"HV QC20 Charge Current",
-		description:"ILIM 1.8A - CHG 3.0A,may not support,be caution!.\n",
-		min:400, max:3500, unit:" mA", step:25,
-		default:$(cat /sys/devices/platform/battery/hv_qc20_charge),
-		action:"generic /sys/devices/platform/battery/hv_qc20_charge"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"HV QC30 Input Current",
-		description:"",
-		min:400, max:4500, unit:" mA", step:25,
-		default:$(cat /sys/devices/platform/battery/hv_qc30_input),
-		action:"generic /sys/devices/platform/battery/hv_qc30_input"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"HV QC30 Charge Current",
-		description:"ILIM 3.0A - CHG 3.5A (Step Charging 4.2A -> 3.0A),need power 18W,may not support,be caution!.\n",
-		min:400, max:4500, unit:" mA", step:25,
-		default:$(cat /sys/devices/platform/battery/hv_qc30_charge),
-		action:"generic /sys/devices/platform/battery/hv_qc30_charge"
-	}},	
-	{ SSpacer:{
-		height:1
-	}},
 	{ SPane:{
 		title:"AC/Mains",
 		description:"AC or mains current limits applied to designated dedicated chargers and corresponding cables."
@@ -282,7 +242,7 @@ cat << CTAG
 	{ SSeekBar:{
 		title:"ACA Input Current",
 		description:"",
-		min:100, max:3000, unit:" mA", step:20,
+		min:400, max:3000, unit:" mA", step:25,
 		default:$(cat /sys/devices/platform/battery/aca_input),
 		action:"generic /sys/devices/platform/battery/aca_input"
 	}},
@@ -292,7 +252,7 @@ cat << CTAG
 	{ SSeekBar:{
 		title:"ACA Charge Current",
 		description:"",
-		min:100, max:3000, unit:" mA", step:20,
+		min:400, max:3000, unit:" mA", step:25,
 		default:$(cat /sys/devices/platform/battery/aca_charge),
 		action:"generic /sys/devices/platform/battery/aca_charge"
 	}},
@@ -416,7 +376,7 @@ cat << CTAG
 	{ SSeekBar:{
 		title:"100 mA MHL USB Class Input Current",
 		description:"",
-		min:80, max:3000, unit:" mA", step:20,
+		min:80, max:3000, unit:" mA", step:25,
 		default:$(cat /sys/devices/platform/battery/mhl_usb100_input),
 		action:"generic /sys/devices/platform/battery/mhl_usb100_input"
 	}},
@@ -426,7 +386,7 @@ cat << CTAG
 	{ SSeekBar:{
 		title:"100 mA MHL USB Class Charge Current",
 		description:"",
-		min:80, max:3000, unit:" mA", step:20,
+		min:80, max:3000, unit:" mA", step:25,
 		default:$(cat /sys/devices/platform/battery/mhl_usb100_charge),
 		action:"generic /sys/devices/platform/battery/mhl_usb100_charge"
 	}},
@@ -463,7 +423,7 @@ cat << CTAG
 	{ SSeekBar:{
 		title:"Wireless Input Current",
 		description:"",
-		min:400, max:3000, unit:" mA", step:20,
+		min:400, max:3000, unit:" mA", step:25,
 		default:$(cat /sys/devices/platform/battery/wc_input),
 		action:"generic /sys/devices/platform/battery/wc_input"
 	}},
@@ -473,90 +433,10 @@ cat << CTAG
 	{ SSeekBar:{
 		title:"Wireless Charge Current",
 		description:"",
-		min:400, max:3000, unit:" mA", step:20,
+		min:400, max:3000, unit:" mA", step:25,
 		default:$(cat /sys/devices/platform/battery/wc_charge),
 		action:"generic /sys/devices/platform/battery/wc_charge"
 	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Pack Input Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/wpc_input),
-		action:"generic /sys/devices/platform/battery/wpc_input"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Pack Charge Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/wpc_charge),
-		action:"generic /sys/devices/platform/battery/wpc_charge"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Pack Ta Input Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/wptc_input),
-		action:"generic /sys/devices/platform/battery/wptc_input"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Pack Ta Charge Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/wptc_charge),
-		action:"generic /sys/devices/platform/battery/wptc_charge"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Stand Input Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/wsc_input),
-		action:"generic /sys/devices/platform/battery/wsc_input"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Stand Charge Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/wsc_charge),
-		action:"generic /sys/devices/platform/battery/wsc_charge"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Hv Stand Input Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/whvsc_input),
-		action:"generic /sys/devices/platform/battery/whvsc_input"
-	}},
-	{ SSpacer:{
-		height:1
-	}},
-	{ SSeekBar:{
-		title:"Wireless Hv Stand Charge Current",
-		description:"",
-		min:400, max:3000, unit:" mA", step:20,
-		default:$(cat /sys/devices/platform/battery/whvsc_charge),
-		action:"generic /sys/devices/platform/battery/whvsc_charge"
-	}},	
 	{ SSpacer:{
 		height:1
 	}},

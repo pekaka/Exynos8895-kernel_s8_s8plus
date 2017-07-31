@@ -40,6 +40,8 @@ fi;
 ui_print " - removing critical mcRegistry"
 
 rm -f /system/app/mcRegistry/ffffffffd0000000000000000000000a.tlbin
+rm -f /system/app/mcRegistry/ffffffffd00000000000000000000004.tlbin
+rm -f /system/app/mcRegistry/ffffffff000000000000000000000013.tlbin
 
 ui_print " - removing vendor files"
 
@@ -49,7 +51,9 @@ rm -f /system/vendor/firmware/fimc_is_rta_2l2_imx320.bin
 rm -f /system/vendor/firmware/fimc_is_rta_imx333_3h1.bin
 rm -f /system/vendor/firmware/fimc_is_rta_imx333_imx320.bin
 rm -f /system/vendor/lib/libsecure_storage.so
+rm -f /system/vendor/lib/libsecure_storage_jni.so
 rm -f /system/vendor/lib64/libsecure_storage.so
+rm -f /system/vendor/lib64/libsecure_storage_jni.so
 
 cd
 cd /tmp/tkkg1994
@@ -59,7 +63,9 @@ mv -f vendor/firmware/fimc_is_rta_2l2_imx320.bin /system/vendor/firmware/fimc_is
 mv -f vendor/firmware/fimc_is_rta_imx333_3h1.bin /system/vendor/firmware/fimc_is_rta_imx333_3h1.bin
 mv -f vendor/firmware/fimc_is_rta_imx333_imx320.bin /system/vendor/firmware/fimc_is_rta_imx333_imx320.bin
 mv -f vendor/lib/libsecure_storage.so /system/vendor/lib/libsecure_storage.so
+mv -f vendor/lib/libsecure_storage_jni.so /system/vendor/lib/libsecure_storage_jni.so
 mv -f vendor/lib64/libsecure_storage.so /system/vendor/lib64/libsecure_storage.so
+mv -f vendor/lib64/libsecure_storage_jni.so /system/vendor/lib64/libsecure_storage_jni.so
 
 ui_print " - setting permissions"
 
@@ -69,7 +75,9 @@ chmod 0644 /system/vendor/firmware/fimc_is_rta_2l2_imx320.bin
 chmod 0644 /system/vendor/firmware/fimc_is_rta_imx333_3h1.bin
 chmod 0644 /system/vendor/firmware/fimc_is_rta_imx333_imx320.bin
 chmod 0644 /system/vendor/lib/libsecure_storage.so
+chmod 0644 /system/vendor/lib/libsecure_storage_jni.so
 chmod 0644 /system/vendor/lib64/libsecure_storage.so
+chmod 0644 /system/vendor/lib64/libsecure_storage_jni.so
 
 ui_print " - unmounting partition /data"
 umount /data > /dev/null 2>&1
