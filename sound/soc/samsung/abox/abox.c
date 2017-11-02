@@ -33,6 +33,7 @@
 #include <sound/samsung/vts.h>
 
 #include <soc/samsung/exynos-pmu.h>
+#include <soc/samsung/exynos-itmon.h>
 #include <misc/exynos_ima.h>
 #include "../../../../drivers/iommu/exynos-iommu.h"
 
@@ -103,6 +104,7 @@ static int abox_iommu_fault_handler(
 static void abox_cpu_power(bool on);
 static int abox_cpu_enable(bool enable);
 static int abox_cpu_pm_ipc(struct device *dev, bool resume);
+static void abox_boot_done(struct device *dev, unsigned int version);
 
 static void exynos_abox_panic_handler(void)
 {
@@ -2931,6 +2933,12 @@ static void abox_check_call_cpu_gear(struct device *dev,
 		void *old_id, unsigned int old_gear,
 		void *id, unsigned int gear)
 {
+	if (id == (void *)ABOX_CPU_GEAR_BOOT &&
+			data->calliope_state == CALLIOPE_ENABLING) {
+		abox_boot_done(dev, data->calliope_version);
+		return;
+	}
+
 	if (id != (void *)ABOX_CPU_GEAR_CALL) {
 		return;
 	}
@@ -2953,6 +2961,34 @@ static void abox_check_call_cpu_gear(struct device *dev,
 			dev_info(dev, "%s: off\n", __func__);
 			pm_runtime_put(&data->pdev->dev);
 		}
+	}
+}
+
+static void abox_notify_cpu_gear(struct abox_data *data, unsigned int freq)
+{
+	struct device *dev = &data->pdev->dev;
+	ABOX_IPC_MSG msg;
+	struct IPC_SYSTEM_MSG *system_msg = &msg.msg.system;
+	unsigned long long time = sched_clock();
+	unsigned long rem = do_div(time, NSEC_PER_SEC);
+
+	switch (data->calliope_state) {
+	case CALLIOPE_ENABLING:
+	case CALLIOPE_ENABLED:
+		dev_dbg(dev, "%s\n", __func__);
+
+		msg.ipcid = IPC_SYSTEM;
+		system_msg->msgtype = ABOX_CHANGED_GEAR;
+		system_msg->param1 = (int)freq;
+		system_msg->param2 = (int)time; /* SEC */
+		system_msg->param3 = (int)rem; /* NSEC */
+		abox_start_ipc_transaction(dev, msg.ipcid, &msg, sizeof(msg), 0, 0);
+		break;
+	case CALLIOPE_DISABLING:
+	case CALLIOPE_DISABLED:
+	default:
+		/* notification to passing by context is not needed */
+		break;
 	}
 }
 
@@ -3019,6 +3055,8 @@ static void abox_change_cpu_gear(struct device *dev, struct abox_data *data)
 			pm_qos_update_request(&abox_pm_qos_int, 0);
 		}
 	}
+
+	abox_notify_cpu_gear(data, clk_get_rate(data->clk_ca7) * 1000);
 }
 
 static void abox_change_cpu_gear_work_func(struct work_struct *work)
@@ -4811,6 +4849,23 @@ static int abox_modem_notifier(struct notifier_block *nb,
 	return NOTIFY_OK;
 }
 
+static int abox_itmon_notifier(struct notifier_block *nb,
+		unsigned long action, void *nb_data)
+{
+	struct abox_data *data = container_of(nb, struct abox_data, itmon_nb);
+	struct device *dev = &data->pdev->dev;
+	struct itmon_notifier *itmon_data = nb_data;
+
+	if (itmon_data && itmon_data->dest && (strncmp("ABOX", itmon_data->dest,
+			sizeof("ABOX") - 1) == 0)) {
+		dev_info(dev, "%s(%lu)\n", __func__, action);
+		data->enabled = false;
+		return NOTIFY_OK;
+	}
+
+	return NOTIFY_DONE;
+}
+
 static ssize_t calliope_version_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -5100,6 +5155,9 @@ static int samsung_abox_probe(struct platform_device *pdev)
 	data->modem_nb.notifier_call = abox_modem_notifier;
 	register_modem_event_notifier(&data->modem_nb);
 
+	data->itmon_nb.notifier_call = abox_itmon_notifier;
+	itmon_notifier_chain_register(&data->itmon_nb);
+
 	abox_ima_init(dev, data);
 
 	dev_info(dev, "%s: probe complete\n", __func__);
@@ -5146,6 +5204,14 @@ static int samsung_abox_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static void samsung_abox_shutdown(struct platform_device *pdev)
+{
+	struct device *dev = &pdev->dev;
+
+	dev_info(dev, "%s\n", __func__);
+	pm_runtime_disable(dev);
+}
+
 static const struct of_device_id samsung_abox_match[] = {
 	{
 		.compatible = "samsung,abox",
@@ -5162,6 +5228,7 @@ static const struct dev_pm_ops samsung_abox_pm = {
 static struct platform_driver samsung_abox_driver = {
 	.probe  = samsung_abox_probe,
 	.remove = samsung_abox_remove,
+	.shutdown = samsung_abox_shutdown,
 	.driver = {
 		.name = "samsung-abox",
 		.owner = THIS_MODULE,

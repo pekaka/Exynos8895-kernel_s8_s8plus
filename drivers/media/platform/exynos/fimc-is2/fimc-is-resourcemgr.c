@@ -38,6 +38,10 @@
 #include <linux/exynos-busmon.h>
 #endif
 
+#ifdef ENABLE_KERNEL_LOG_DUMP
+#include <linux/exynos-ss.h>
+#endif
+
 #include "fimc-is-resourcemgr.h"
 #include "fimc-is-hw.h"
 #include "fimc-is-debug.h"
@@ -604,6 +608,52 @@ p_err:
 }
 #endif
 
+#ifdef ENABLE_KERNEL_LOG_DUMP
+static int fimc_is_kernel_log_dump(bool overwrite)
+{
+	static int dumped;
+	struct fimc_is_core *core;
+	struct fimc_is_resourcemgr *resourcemgr;
+	void *log_kernel;
+	unsigned long long when;
+	unsigned long usec;
+
+	core = (struct fimc_is_core *)dev_get_drvdata(fimc_is_dev);
+	if (!core)
+		return -EINVAL;
+
+	resourcemgr = &core->resourcemgr;
+
+	if (dumped && !overwrite) {
+		when = resourcemgr->kernel_log_time;
+		usec = do_div(when, NSEC_PER_SEC) / NSEC_PER_USEC;
+		info("kernel log was saved already at [%5lu.%06lu]\n",
+				(unsigned long)when, usec);
+
+		return -ENOSPC;
+	}
+
+	log_kernel = (void *)exynos_ss_get_item_vaddr("log_kernel");
+	if (!log_kernel)
+		return -EINVAL;
+
+	if (resourcemgr->kernel_log_buf) {
+		resourcemgr->kernel_log_time = local_clock();
+
+		info("kernel log saved to %p(%p) from %p\n",
+				resourcemgr->kernel_log_buf,
+				(void *)virt_to_phys(resourcemgr->kernel_log_buf),
+				log_kernel);
+		memcpy(resourcemgr->kernel_log_buf, log_kernel,
+				exynos_ss_get_item_size("log_kernel"));
+
+		dumped = 1;
+	}
+
+	return 0;
+}
+#endif
+
 int fimc_is_resource_dump(void)
 {
 	struct fimc_is_core *core = NULL;
@@ -769,6 +819,10 @@ int fimc_is_resourcemgr_probe(struct fimc_is_resourcemgr *resourcemgr,
 	/* to dump share region in fw area */
 	resourcemgr->fw_share_dump_buf = (ulong)kzalloc(SHARED_SIZE, GFP_KERNEL);
 #endif
+#ifdef ENABLE_KERNEL_LOG_DUMP
+	resourcemgr->kernel_log_buf = kzalloc(exynos_ss_get_item_size("log_kernel"),
+						GFP_KERNEL);
+#endif
 
 p_err:
 	probe_info("[RSC] %s(%d)\n", __func__, ret);
@@ -818,7 +872,6 @@ int fimc_is_resource_open(struct fimc_is_resourcemgr *resourcemgr, u32 rsc_type,
 		result = &core->sensor[RESOURCE_TYPE_SENSOR3];
 		resource->pdev = core->sensor[RESOURCE_TYPE_SENSOR3].pdev;
 		break;
-#if (FIMC_IS_SENSOR_COUNT > 4)
 	case RESOURCE_TYPE_SENSOR4:
 		result = &core->sensor[RESOURCE_TYPE_SENSOR4];
 		resource->pdev = core->sensor[RESOURCE_TYPE_SENSOR4].pdev;
@@ -827,7 +880,6 @@ int fimc_is_resource_open(struct fimc_is_resourcemgr *resourcemgr, u32 rsc_type,
 		result = &core->sensor[RESOURCE_TYPE_SENSOR5];
 		resource->pdev = core->sensor[RESOURCE_TYPE_SENSOR5].pdev;
 		break;
-#endif
 	case RESOURCE_TYPE_ISCHAIN:
 		for (stream = 0; stream < FIMC_IS_STREAM_COUNT; ++stream) {
 			ischain = &core->ischain[stream];
@@ -1239,6 +1291,14 @@ int fimc_is_resource_put(struct fimc_is_resourcemgr *resourcemgr, u32 rsc_type)
 
 	atomic_dec(&resource->rsccount);
 	atomic_dec(&core->rsccount);
+
+#ifdef ENABLE_KERNEL_LOG_DUMP
+	/* to secure kernel log when there was an instance that remain open */
+	if ((rsc_type == RESOURCE_TYPE_ISCHAIN)
+			&& (atomic_read(&resource->rsccount) == 0)
+			&& (atomic_read(&core->rsccount) == 1))
+		fimc_is_kernel_log_dump(false);
+#endif
 
 p_err:
 	info("[RSC] rsctype: %d, rsccount: device[%d], core[%d]\n", rsc_type,

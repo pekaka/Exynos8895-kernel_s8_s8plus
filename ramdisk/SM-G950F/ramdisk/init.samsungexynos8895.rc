@@ -35,6 +35,7 @@ on init
 on post-fs-data
 # Log data folder
     mkdir /data/log 0771 radio system
+    mkdir /data/log/abox 0771 audioserver system
 
     setprop vold.post_fs_data_done 1
 
@@ -60,6 +61,10 @@ on post-fs-data
     chmod 0440 /sys/class/dsm/max98506/spk_temp_maxtime
     chown system audio /sys/class/dsm/max98506/spk_temp_overcnt
     chmod 0440 /sys/class/dsm/max98506/spk_temp_overcnt
+    chown system audio /sys/class/dsm/max98506/spk_amp_reg_wrong_cnt
+    chmod 0440 /sys/class/dsm/max98506/spk_amp_reg_wrong_cnt
+    chown system audio /sys/class/dsm/max98506/spk_amp_reg_diff_dump
+    chmod 0440 /sys/class/dsm/max98506/spk_amp_reg_diff_dump
     chown system audio /sys/class/dsm/maxdsm_cal/max
     chown system audio /sys/class/dsm/maxdsm_cal/min
     chown system audio /sys/class/dsm/maxdsm_cal/status
@@ -68,6 +73,9 @@ on post-fs-data
     chown system audio /sys/class/dsm/maxdsm_cal/rdc
     chown system audio /sys/class/dsm/maxdsm_power/duration
     chown system audio /sys/class/dsm/maxdsm_power/interval
+    chown system audio /sys/class/dsm/maxdsm_cal/v_status
+    chown system audio /sys/class/dsm/maxdsm_cal/v_duration
+    chown system audio /sys/class/dsm/maxdsm_cal/v_validation
     chown system audio /sys/class/dsm/maxdsm_power/status	
     mkdir /data/firmware 0770 audioserver system
     mkdir /efs/maxim 0770 system audio
@@ -887,6 +895,12 @@ on property:sys.mobicoredaemon.enable=true
 on property:sys.boot_completed=1
     setprop security.semdaemonfinish 0
     start sem_daemon
+    # Change permission for A-Box firmware logs file & GPR dump
+    chown audioserver system /sys/kernel/debug/abox/log-00
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/gpr
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_sram
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_dram
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_iva
 
 on property:security.semdaemonfinish=1
     stop sem_daemon
